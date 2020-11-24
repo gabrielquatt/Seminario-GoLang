@@ -4,16 +4,18 @@ import (
 	"fmt"
 )
 
+//--- go run ./CRUD/ *.go ---//
+
 func main() {
 
 	//CRUD
 	c := NewCollection()
 
-	c.Add(Libro{0, "Libroq", "description", "author", 200}) //Create
+	c.Add(game{0, "game", "description", "author"}) //Create
 
-	c.Add(Libro{1, "Libro2", "bbbb", "author2", 2000}) //Create
+	c.Add(game{1, "game2", "bbbb", "author2"}) //Create
 
-	c.Add(Libro{2, "Libro3", "aaaa", "author2", 900}) //Create
+	c.Add(game{2, "game3", "aaaa", "author3"}) //Create
 
 	c.Print() //imprime el map
 
@@ -25,7 +27,7 @@ func main() {
 	c.Delete(0) //elimina segun el id mandado
 	c.Print()
 	fmt.Println(".......................")
-	c.Update(Libro{2, "----", "----", "----", 203})
+	c.Update(game{2, "----", "----", "----"})
 	c.Print()
 
 }
