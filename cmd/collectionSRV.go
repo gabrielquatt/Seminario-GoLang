@@ -37,8 +37,13 @@ func main() {
 
 	service, _ := collection.NewService(db, cfg)
 	//carga de datos de prueba
-	s := service.PostGame("DOOM", "juego cargado de prueba", "id sofware")
-	fmt.Println(s)
+
+	/* s := service.PostGame("DOOM", "juego cargado de prueba", "id sofware")
+	fmt.Println(s) */
+
+	/* service.PostGame("DOOM", "juego cargado de prueba", "id sofware")
+	service.PostGame("Call Of Duty", "Segundo juego cargado de prueba", "pum")
+	service.PostGame("PES 2020", "tercer juego cargado de prueba", "copy paste") */
 
 	httpService := collection.NewHTTPTransport(service)
 
