@@ -29,7 +29,7 @@ func main() {
 	}
 	defer db.Close()
 
-	err = createSchema(db) //creo db de prueba
+	err = createSchema(db) // db de prueba
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

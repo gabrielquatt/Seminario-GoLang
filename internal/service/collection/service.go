@@ -38,7 +38,7 @@ func NewService(db *sqlx.DB, c *config.Config) (Service, error) {
 
 //----------------------------------------------------------------------------//
 
-// DeleteGame elimina un juego segun su ID
+// DeleteGame Elimina un juego segun su ID
 func (s service) DeleteGame(i int) string {
 	query := `DELETE FROM game WHERE id = ?`
 	res, err := s.db.Exec(query, i)
@@ -66,15 +66,12 @@ func (s service) DeleteAllGames() string {
 // PostGame Agrega elementos en la base de datos
 func (s service) PostGame(t string, d string, dev string) string {
 	query := `INSERT INTO game (title, description, developer) VALUES (?, ?, ?)`
-
 	res := s.db.MustExec(query, t, d, dev)
-
 	LastID, _ := res.LastInsertId() //retorna el ultimo ID añadido
-
 	return fmt.Sprintf("New Game ID: %d", LastID)
 }
 
-// EditGame recivo strings, y el id del juego a editar
+// EditGame Recive strings, y el ID del Game a editar
 func (s service) EditGame(t string, des string, dev string, i int) string {
 	query := `UPDATE game SET title = ?, description = ?, developer = ? WHERE id = ?`
 	_, err := s.db.Exec(query, t, des, dev, i)
@@ -98,7 +95,7 @@ func (s service) GetAll() []*Game {
 	return list
 }
 
-// getGameById Devuelve un juego segun su ID
+// GetGameById Devuelve un juego segun su ID
 func (s service) GetGameById(i int) *Game {
 	var g Game
 	query := `SELECT * FROM game WHERE id = ?`

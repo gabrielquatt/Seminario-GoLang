@@ -31,42 +31,42 @@ func NewHTTPTransport(s Service) HTTPService {
 func makeEndpoints(s Service) []*endpoint {
 	list := []*endpoint{}
 
-	// obtener todos los juegos
+	// GET List All Game
 	list = append(list, &endpoint{
 		method:   "GET",
 		path:     "/games/AllGames",
 		function: getAll(s),
 	})
 
-	// obtener todos los juegos
+	// GET Game By ID
 	list = append(list, &endpoint{
 		method:   "GET",
 		path:     "/games/GetGame/:ID",
 		function: getGameById(s),
 	})
 
-	// agrego un juego
+	// Add New Game
 	list = append(list, &endpoint{
 		method:   "POST",
 		path:     "/games/NewGame",
 		function: postGame(s),
 	})
 
-	// borrar TODOS los juegos de la base de datos
+	// DELETE ALL GAMES
 	list = append(list, &endpoint{
 		method:   "DELETE",
 		path:     "/games/DeleteAllGames",
 		function: deleteAllGame(s),
 	})
 
-	// borrar un juego segun si ID
+	// DELETE GAME BY ID
 	list = append(list, &endpoint{
 		method:   "DELETE",
 		path:     "/games/DeleteGame/:ID",
 		function: deleteGame(s),
 	})
 
-	// editar un juego
+	// EDIT GAME
 	list = append(list, &endpoint{
 		method:   "PUT",
 		path:     "/games/EditGame/:ID",
@@ -111,24 +111,25 @@ func postGame(s Service) gin.HandlerFunc {
 	}
 }
 
-func getAll(s Service) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.GetAll(),
-		})
-	}
-}
-
 func editGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		aux := c.Param("ID")
 		i, _ := strconv.Atoi(aux)
-		//TODO tratar de capturar valores de un JSON y no por Query
+		//--------------------------------//
 		title := c.Query("Title")
 		description := c.Query("Description")
 		developer := c.Query("Developer")
+		//--------------------------------//
 		c.JSON(http.StatusOK, gin.H{
 			"status": s.EditGame(title, description, developer, i),
+		})
+	}
+}
+
+func getAll(s Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": s.GetAll(),
 		})
 	}
 }
