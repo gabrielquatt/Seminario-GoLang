@@ -2,6 +2,7 @@ package collection
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,13 @@ func makeEndpoints(s Service) []*endpoint {
 		function: getAll(s),
 	})
 
+	// obtener todos los juegos
+	list = append(list, &endpoint{
+		method:   "GET",
+		path:     "/games/GetGame/:ID",
+		function: getGameById(s),
+	})
+
 	// agrego un juego
 	list = append(list, &endpoint{
 		method:   "POST",
@@ -58,7 +66,7 @@ func makeEndpoints(s Service) []*endpoint {
 		function: deleteGame(s),
 	})
 
-	// ediar un juego
+	// editar un juego
 	list = append(list, &endpoint{
 		method:   "PUT",
 		path:     "/games/EditGame/:ID",
@@ -72,8 +80,8 @@ func makeEndpoints(s Service) []*endpoint {
 
 func deleteGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
-		i := c.Param("ID")
+		aux := c.Param("ID")
+		i, _ := strconv.Atoi(aux)
 		c.JSON(http.StatusOK, gin.H{
 			"status": s.DeleteGame(i),
 		})
@@ -113,13 +121,25 @@ func getAll(s Service) gin.HandlerFunc {
 
 func editGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		i := c.Param("ID")
+		aux := c.Param("ID")
+		i, _ := strconv.Atoi(aux)
 		//TODO tratar de capturar valores de un JSON y no por Query
 		title := c.Query("Title")
 		description := c.Query("Description")
 		developer := c.Query("Developer")
 		c.JSON(http.StatusOK, gin.H{
 			"status": s.EditGame(title, description, developer, i),
+		})
+	}
+}
+
+func getGameById(s Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		aux := c.Param("ID")
+		i, _ := strconv.Atoi(aux)
+
+		c.JSON(http.StatusOK, gin.H{
+			"status": s.GetGameById(i),
 		})
 	}
 }

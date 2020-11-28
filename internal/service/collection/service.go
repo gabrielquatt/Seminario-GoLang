@@ -24,11 +24,11 @@ type service struct {
 // Service interface
 type Service interface {
 	GetAll() []*Game
+	GetGameById(int) *Game
 	PostGame(string, string, string) string
 	DeleteAllGames() string
-	DeleteGame(string) string
-	EditGame(string, string, string, string) string
-	/* EditGame(Game, string) string */
+	DeleteGame(int) string
+	EditGame(string, string, string, int) string
 }
 
 // NewService ...
@@ -39,8 +39,8 @@ func NewService(db *sqlx.DB, c *config.Config) (Service, error) {
 //----------------------------------------------------------------------------//
 
 // DeleteGame elimina un juego segun su ID
-func (s service) DeleteGame(i string) string {
-	query := `DELETE FROM game WHERE id = (?)`
+func (s service) DeleteGame(i int) string {
+	query := `DELETE FROM game WHERE id = ?`
 	res, err := s.db.Exec(query, i)
 
 	if err != nil {
@@ -63,10 +63,33 @@ func (s service) DeleteAllGames() string {
 	return "Clear Complet"
 }
 
+// PostGame Agrega elementos en la base de datos
+func (s service) PostGame(t string, d string, dev string) string {
+	query := `INSERT INTO game (title, description, developer) VALUES (?, ?, ?)`
+
+	res := s.db.MustExec(query, t, d, dev)
+
+	LastID, _ := res.LastInsertId() //retorna el ultimo ID añadido
+
+	return fmt.Sprintf("New Game ID: %d", LastID)
+}
+
+// EditGame recivo strings, y el id del juego a editar
+func (s service) EditGame(t string, des string, dev string, i int) string {
+	query := `UPDATE game SET title = ?, description = ?, developer = ? WHERE id = ?`
+	_, err := s.db.Exec(query, t, des, dev, i)
+
+	if err != nil {
+		return fmt.Sprintf("%v", errors.New("ERROR "+err.Error()))
+	}
+
+	return fmt.Sprintf("Column Game Edit: %v", i)
+}
+
 // GetAll  Devuelve una lista de todos los elementos en la base de datos
 func (s service) GetAll() []*Game {
 	var list []*Game
-	query := "SELECT * FROM game"
+	query := `SELECT * FROM game`
 	err := s.db.Select(&list, query)
 
 	if err != nil {
@@ -75,38 +98,16 @@ func (s service) GetAll() []*Game {
 	return list
 }
 
-// PostGame Agrega elementos en la base de datos
-func (s service) PostGame(t string, d string, dev string) string {
-	query := `INSERT INTO game (title, description, developer) VALUES (?, ?, ?)`
-
-	res := s.db.MustExec(query, t, d, dev)
-	LastID, _ := res.LastInsertId() //retorna el ultimo ID añadido
-
-	return fmt.Sprintf("New Game ID: %d", LastID)
-}
-
-// EditGame recivo strings, y el id del juego a editar
-func (s service) EditGame(t string, des string, dev string, i string) string {
-	query := `UPDATE game SET title = ?, description = ?, developer = ? WHERE id = ?`
-	_, err := s.db.Exec(query, t, des, dev, i)
+// getGameById Devuelve un juego segun su ID
+func (s service) GetGameById(i int) *Game {
+	var g Game
+	query := `SELECT * FROM game WHERE id = ?`
+	err := s.db.Get(&g, query, i)
 
 	if err != nil {
-		return fmt.Sprintf("%v", errors.New("ERROR "+err.Error()))
+		return nil
 	}
-
-	return fmt.Sprintf("Column game edit: " + i)
-}
-
-// EditGame recivo strings, y el id del juego a editar
-func (s service) EditGame2(g Game, i string) string {
-	query := `UPDATE game SET title = ?, description = ?, developer = ? WHERE id = ?`
-	_, err := s.db.Exec(query, g.Title, g.Description, g.Developer, i)
-
-	if err != nil {
-		return fmt.Sprintf("%v", errors.New("ERROR "+err.Error()))
-	}
-
-	return fmt.Sprintf("Column game edit: " + i)
+	return &g
 }
 
 //---------------------------------------------------------------------------------//
