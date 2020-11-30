@@ -80,68 +80,128 @@ func makeEndpoints(s Service) []*endpoint {
 
 func deleteGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		aux := c.Param("ID")
-		i, _ := strconv.Atoi(aux)
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.DeleteGame(i),
-		})
+		v, _ := strconv.Atoi(aux)
+		i := int64(v)
+
+		err := s.DeleteGame(i)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "OK",
+			})
+		}
+
 	}
 }
 
 func deleteAllGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.DeleteAllGames(),
-		})
+
+		err := s.DeleteAllGames()
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "OK",
+			})
+		}
 	}
 }
 
 func postGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//TODO tratar de capturar valores de un JSON y no por Query
 
-		//tomo por parametro de url los valores a guardar
 		title := c.Query("Title")
 		description := c.Query("Description")
 		developer := c.Query("Developer")
-		//luego los envio
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.PostGame(title, description, developer),
-		})
+
+		g, err := s.PostGame(NewGame(0, title, description, developer))
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status":   "OK",
+				"New Game": g,
+			})
+		}
 	}
 }
 
 func editGame(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		aux := c.Param("ID")
-		i, _ := strconv.Atoi(aux)
-		//--------------------------------//
+		v, _ := strconv.Atoi(aux)
+		i := int64(v)
+
 		title := c.Query("Title")
 		description := c.Query("Description")
 		developer := c.Query("Developer")
-		//--------------------------------//
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.EditGame(title, description, developer, i),
-		})
+
+		g, err := s.EditGame(NewGame(i, title, description, developer))
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status":    "OK",
+				"Game Edit": g,
+			})
+		}
 	}
 }
 
 func getAll(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.GetAll(),
-		})
+
+		g, err := s.GetAll()
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "OK",
+				"Games":  g,
+			})
+		}
 	}
 }
 
 func getGameById(s Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		aux := c.Param("ID")
-		i, _ := strconv.Atoi(aux)
 
-		c.JSON(http.StatusOK, gin.H{
-			"status": s.GetGameById(i),
-		})
+		aux := c.Param("ID")
+		v, _ := strconv.Atoi(aux)
+		i := int64(v)
+
+		g, err := s.GetGameById(i)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "OK",
+				"Game":   g,
+			})
+		}
 	}
 }
 

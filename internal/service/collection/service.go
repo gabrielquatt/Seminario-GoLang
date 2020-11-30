@@ -2,7 +2,6 @@ package collection
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/Gabriel-Quattrini/Seminario-GoLang/internal/config"
 	"github.com/jmoiron/sqlx"
@@ -10,7 +9,7 @@ import (
 
 // Game ...
 type Game struct {
-	ID          int    `db:"id"`
+	ID          int64  `db:"id"`
 	Title       string `db:"title"`
 	Description string `db:"description"`
 	Developer   string `db:"developer"`
@@ -23,12 +22,12 @@ type service struct {
 
 // Service interface
 type Service interface {
-	GetAll() []*Game
-	GetGameById(int) *Game
-	PostGame(string, string, string) string
-	DeleteAllGames() string
-	DeleteGame(int) string
-	EditGame(string, string, string, int) string
+	DeleteGame(int64) error
+	DeleteAllGames() error
+	PostGame(*Game) (*Game, error)
+	EditGame(*Game) (*Game, error)
+	GetAll() ([]*Game, error)
+	GetGameById(int64) (*Game, error)
 }
 
 // NewService ...
@@ -36,81 +35,116 @@ func NewService(db *sqlx.DB, c *config.Config) (Service, error) {
 	return service{db, c}, nil
 }
 
+func NewGame(i int64, t string, des string, dev string) *Game {
+	return &Game{
+		ID:          i,
+		Title:       t,
+		Description: des,
+		Developer:   dev,
+	}
+}
+
 //----------------------------------------------------------------------------//
 
 // DeleteGame Elimina un juego segun su ID
-func (s service) DeleteGame(i int) string {
+func (s service) DeleteGame(i int64) error {
+
 	query := `DELETE FROM game WHERE id = ?`
 	res, err := s.db.Exec(query, i)
 
 	if err != nil {
-		return fmt.Sprintf("%v", errors.New("ERROR "+err.Error()))
+		return errors.New("ERROR IN THE DATABASE " + err.Error())
 	}
-	RowsAffected, _ := res.RowsAffected()
 
-	return fmt.Sprintf("GAME Column Delete: %d", RowsAffected)
+	c, _ := res.RowsAffected()
+
+	if c == 0 {
+		return errors.New("GAME NO EXIST")
+	}
+
+	return nil
 }
 
 // DeleteAllGames Elimina todos los elementos en la base de datos
-func (s service) DeleteAllGames() string {
+func (s service) DeleteAllGames() error {
+
 	query := `DELETE FROM game`
-	_, err := s.db.Exec(query)
+	res, err := s.db.Exec(query)
 
 	if err != nil {
-		return "ERROR, NO SE PUDO ELIMINAR GAME"
+		return errors.New("ERROR IN THE DATABASE " + err.Error())
 	}
 
-	return "Clear Complet"
+	c, _ := res.RowsAffected()
+
+	if c == 0 {
+		return errors.New("NO GAMES ELIMINATED")
+	}
+
+	return nil
 }
 
 // PostGame Agrega elementos en la base de datos
-func (s service) PostGame(t string, d string, dev string) string {
+func (s service) PostGame(g *Game) (*Game, error) {
+
 	query := `INSERT INTO game (title, description, developer) VALUES (?, ?, ?)`
-	res := s.db.MustExec(query, t, d, dev)
-	LastID, _ := res.LastInsertId() //retorna el ultimo ID añadido
-	return fmt.Sprintf("New Game ID: %d", LastID)
+	res, err := s.db.Exec(query, g.Title, g.Description, g.Description)
+
+	if err != nil {
+		return nil, errors.New("ERROR IN THE DATABASE " + err.Error())
+	}
+
+	i, _ := res.LastInsertId()
+	g.ID = i
+
+	return g, nil
 }
 
 // EditGame Recive strings, y el ID del Game a editar
-func (s service) EditGame(t string, des string, dev string, i int) string {
+func (s service) EditGame(g *Game) (*Game, error) {
+
 	query := `UPDATE game SET title = ?, description = ?, developer = ? WHERE id = ?`
-	_, err := s.db.Exec(query, t, des, dev, i)
+	res, err := s.db.Exec(query, g.Title, g.Description, g.Developer, g.ID)
 
 	if err != nil {
-		return fmt.Sprintf("%v", errors.New("ERROR "+err.Error()))
+		return nil, errors.New("ERROR IN THE DATABASE " + err.Error())
 	}
 
-	return fmt.Sprintf("Column Game Edit: %v", i)
+	c, _ := res.RowsAffected()
+
+	if c == 0 {
+		return nil, errors.New("NO GAME EDITED")
+	}
+
+	return g, nil
 }
 
 // GetAll  Devuelve una lista de todos los elementos en la base de datos
-func (s service) GetAll() []*Game {
+func (s service) GetAll() ([]*Game, error) {
+
 	var list []*Game
+
 	query := `SELECT * FROM game`
 	err := s.db.Select(&list, query)
 
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	return list
+
+	return list, nil
 }
 
 // GetGameById Devuelve un juego segun su ID
-func (s service) GetGameById(i int) *Game {
+func (s service) GetGameById(i int64) (*Game, error) {
+
 	var g Game
+
 	query := `SELECT * FROM game WHERE id = ?`
 	err := s.db.Get(&g, query, i)
 
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return &g
+
+	return &g, nil
 }
-
-//---------------------------------------------------------------------------------//
-
-//TODO -manejar los errores mejor y no solo devolver un string
-// 	   -no ignorar sql:Result cuando uso Ecex en editar y eliminar
-
-// link de donde saque referencias para la realizacion los metodos
-// https://parzibyte.me/blog/2018/12/10/crud-golang-mysql/
